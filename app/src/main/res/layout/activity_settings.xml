@@ -102,33 +102,33 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ourvon bundles everything it needs."
+            android:text="Embedded Java server — starts instantly."
             android:textColor="@color/text_muted"
             android:textSize="13sp"
             android:layout_marginBottom="4dp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1. Tap 'Setup Backend' on the main screen"
+            android:text="1. Open the app, server starts automatically"
             android:textColor="@color/text_muted"
             android:textSize="13sp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2. Downloads Node.js + OURVON CLI (~30MB)"
+            android:text="2. Proxies LLM calls to Zen (opencode.ai)"
             android:textColor="@color/text_muted"
             android:textSize="13sp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="3. Server starts automatically"
+            android:text="3. Processes files, tools, and commands locally"
             android:textColor="@color/text_muted"
             android:textSize="13sp"
             android:layout_marginBottom="8dp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="No Termux required. Works offline after setup."
+            android:text="No downloads. No Termux. Works offline for file ops."
             android:textColor="@color/accent"
             android:textSize="12sp"
             android:layout_marginBottom="16dp" />

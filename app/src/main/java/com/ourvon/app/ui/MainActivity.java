@@ -40,8 +40,6 @@ public class MainActivity extends AppCompatActivity {
 
   private static final String PREFS = "ourvon_prefs";
   private static final String KEY_URL = "server_url";
-  private static final String KEY_USER = "username";
-  private static final String KEY_PASS = "password";
 
   private OurvonClient client;
   private LocalBackendManager backend;
@@ -83,157 +81,69 @@ public class MainActivity extends AppCompatActivity {
     connectBtn.setOnClickListener(v -> connect());
     nav.setNavigationItemSelectedListener(this::onNav);
 
-    // Initialize local backend manager
     backend = new LocalBackendManager(this);
     loadPrefs();
-    autoConnect();
+    startBackend();
   }
 
   private void loadPrefs() {
     SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
-    // Default to localhost for local backend mode
     String url = p.getString(KEY_URL, "127.0.0.1:4096");
-    String user = p.getString(KEY_USER, "ourvon");
-    String pass = p.getString(KEY_PASS, "");
-    client = new OurvonClient(url, user, pass);
+    client = new OurvonClient(url, "ourvon", "");
   }
 
-  // ────────── Connect ──────────
+  // ────────── Start & Connect ──────────
 
-  private void autoConnect() {
-    // First try: check if local server is already running
-    new Thread(() -> {
-      try {
-        if (client.checkHealth()) {
-          runOnUiThread(() -> onConnected("Connected to local backend"));
-          return;
-        }
-      } catch (Exception ignored) {}
+  private void startBackend() {
+    connectBtn.setText("Starting...");
+    connectBtn.setEnabled(false);
+    statusBar.setText("Starting local server...");
 
-      // Check what state the backend is in
-      LocalBackendManager.BackendStatus bs = backend.getStatus();
-      runOnUiThread(() -> {
-        if (backend.isSetupNeeded()) {
-          connectBtn.setText("Setup Backend");
-          statusBar.setText("First run: download Node.js + CLI (~30MB)");
-        } else if (bs == LocalBackendManager.BackendStatus.STOPPED) {
-          connectBtn.setText("Start Local Backend");
-          statusBar.setText("Backend installed, ready to start");
-        } else {
-          connectBtn.setText("Connect");
-          statusBar.setText("Backend: " + bs.name());
-        }
-        connectBtn.setVisibility(View.VISIBLE);
-      });
-    }).start();
+    backend.startServer((success, msg) -> runOnUiThread(() -> {
+      connectBtn.setEnabled(true);
+      if (success) {
+        loadPrefs();
+        connectToServer();
+      } else {
+        connectBtn.setText("Retry");
+        statusBar.setText("Failed: " + msg);
+        Toast.makeText(this, "Server start failed: " + msg, Toast.LENGTH_LONG).show();
+      }
+    }));
   }
 
-  private void connect() {
-    LocalBackendManager.BackendStatus bs = backend.getStatus();
+  private void connect() { startBackend(); }
 
-    if (backend.isSetupNeeded()) {
-      // Self-contained setup: download Node.js + CLI
-      connectBtn.setText("Downloading...");
-      connectBtn.setEnabled(false);
-      statusBar.setText("Setting up OURVON backend...");
-
-      backend.setupBackend(new LocalBackendManager.SetupCallback() {
-        @Override public void onProgress(String msg, int pct) {
-          runOnUiThread(() -> statusBar.setText(msg));
-        }
-        @Override public void onResult(boolean success, String msg) {
-          runOnUiThread(() -> {
-            connectBtn.setEnabled(true);
-            if (success) {
-              statusBar.setText("Backend installed. Starting...");
-              startBackend();
-            } else {
-              connectBtn.setText("Retry Setup");
-              statusBar.setText("Setup failed: " + msg);
-              Snackbar.make(chatList, "Download failed. Check internet.", Snackbar.LENGTH_LONG).show();
-            }
-          });
-        }
-      });
-      return;
-    }
-
-    if (bs == LocalBackendManager.BackendStatus.STOPPED) {
-      startBackend();
-      return;
-    }
-
-    // Backend is already running, connect
+  private void connectToServer() {
     connectBtn.setText("Connecting...");
     connectBtn.setEnabled(false);
+    statusBar.setText("Connecting to server...");
+
     new Thread(() -> {
       try {
         if (client.checkHealth()) {
-          runOnUiThread(() -> onConnected("Connected to OURVON backend"));
+          runOnUiThread(() -> {
+            connectBtn.setVisibility(View.GONE);
+            inputCard.setVisibility(View.VISIBLE);
+            statusBar.setText("OURVON ready");
+            Snackbar.make(chatList, "Server ready", Snackbar.LENGTH_SHORT).show();
+            createOrResumeSession();
+          });
         } else {
           runOnUiThread(() -> {
             connectBtn.setText("Connect");
             connectBtn.setEnabled(true);
-            Toast.makeText(this, "Backend unreachable", Toast.LENGTH_LONG).show();
+            statusBar.setText("Server unreachable");
           });
         }
       } catch (Exception e) {
         runOnUiThread(() -> {
-          connectBtn.setText("Connect");
+          connectBtn.setText("Retry");
           connectBtn.setEnabled(true);
           statusBar.setText("Error: " + e.getMessage());
         });
       }
     }).start();
-  }
-
-  private void startBackend() {
-    connectBtn.setText("Starting...");
-    connectBtn.setEnabled(false);
-    statusBar.setText("Starting OURVON backend...");
-
-    backend.startServer((success, msg) -> runOnUiThread(() -> {
-      connectBtn.setEnabled(true);
-      if (success) {
-        new Thread(() -> {
-          try {
-            if (client.checkHealth()) {
-              runOnUiThread(() -> onConnected(msg));
-            } else {
-              connectBtn.setText("Connect");
-              statusBar.setText("Backend started but unreachable");
-            }
-          } catch (Exception e) {
-            connectBtn.setText("Connect");
-            statusBar.setText("Error: " + e.getMessage());
-          }
-        }).start();
-      } else {
-        connectBtn.setText("Retry");
-        statusBar.setText("Failed: " + msg);
-        Toast.makeText(this, "Start failed: " + msg, Toast.LENGTH_LONG).show();
-      }
-    }));
-  }
-
-  private void onConnected(String msg) {
-    connectBtn.setVisibility(View.GONE);
-    inputCard.setVisibility(View.VISIBLE);
-    statusBar.setText(msg);
-    Snackbar.make(chatList, "OURVON backend ready", Snackbar.LENGTH_SHORT).show();
-    createOrResumeSession();
-  }
-
-  private void showSetupGuide() {
-    Snackbar.make(chatList,
-        "OURVON backend not found. Install via Termux:\n" +
-        "1. pkg install nodejs\n" +
-        "2. npm install -g ourvon-ai\n" +
-        "3. ourvon serve",
-        Snackbar.LENGTH_INDEFINITE)
-        .setAction("Settings", v ->
-            startActivity(new Intent(this, SettingsActivity.class)))
-        .show();
   }
 
   // ────────── Session ──────────
