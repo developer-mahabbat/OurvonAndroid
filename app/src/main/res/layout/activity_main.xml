@@ -105,7 +105,7 @@
             android:layout_margin="16dp"
             android:text="Connect"
             android:visibility="gone"
-            app:icon="@android:drawable/ic_menu_compass"
+            app:icon="@drawable/ic_compass"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toTopOf="@id/inputCard" />
 

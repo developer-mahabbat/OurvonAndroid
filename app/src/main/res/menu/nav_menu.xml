@@ -2,17 +2,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/nav_sessions"
         android:title="Session List"
-        android:icon="@android:drawable/ic_menu_recent_history" />
+        android:icon="@drawable/ic_history" />
     <item android:id="@+id/nav_files"
         android:title="File Browser"
-        android:icon="@android:drawable/ic_menu_folder" />
+        android:icon="@drawable/ic_folder" />
     <item android:id="@+id/nav_providers"
         android:title="Providers"
-        android:icon="@android:drawable/ic_menu_gallery" />
+        android:icon="@drawable/ic_gallery" />
     <item android:id="@+id/nav_settings"
         android:title="Settings"
-        android:icon="@android:drawable/ic_menu_preferences" />
+        android:icon="@drawable/ic_settings" />
     <item android:id="@+id/nav_disconnect"
         android:title="Disconnect"
-        android:icon="@android:drawable/ic_menu_close_clear_cancel" />
+        android:icon="@drawable/ic_close" />
 </menu>

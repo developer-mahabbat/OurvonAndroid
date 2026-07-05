@@ -64,8 +64,8 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.Holder> {
 
     void bind(ApiModels.FileEntry f) {
       boolean isDir = "directory".equals(f.type);
-      icon.setImageResource(isDir ? android.R.drawable.ic_menu_folder
-                                   : android.R.drawable.ic_menu_edit);
+      icon.setImageResource(isDir ? R.drawable.ic_folder
+                                   : R.drawable.ic_edit);
       name.setText(f.name != null ? f.name : "?");
       String extra = "";
       if (f.size > 0) extra += formatSize(f.size) + "  ";
