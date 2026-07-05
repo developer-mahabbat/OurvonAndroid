@@ -40,7 +40,7 @@ public class LocalBackendManager {
 
   private void detectBackend() {
     // Check 1: Is ourvon binary available in app's native lib dir?
-    File nativeBin = new File(context.getApplicationInfo().nativeLibDir, "libourvon.so");
+    File nativeBin = new File(context.getApplicationInfo().nativeLibraryDir, "libourvon.so");
     if (nativeBin.exists()) {
       binaryPath = nativeBin.getAbsolutePath();
       mode = BackendMode.LOCAL;

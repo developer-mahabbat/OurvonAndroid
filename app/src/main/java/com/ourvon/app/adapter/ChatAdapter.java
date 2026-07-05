@@ -1,5 +1,6 @@
 package com.ourvon.app.adapter;
 
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -102,11 +103,11 @@ public class ChatAdapter extends ListAdapter<ApiModels.Message, ChatAdapter.Hold
       if (isUser) {
         bg = ContextCompat.getColor(itemView.getContext(), R.color.user_bubble);
         txt = 0xFFFFFFFF;
-        container.setHorizontalGravity(ViewGroup.Gravity.END);
+        container.setHorizontalGravity(Gravity.END);
       } else {
         bg = ContextCompat.getColor(itemView.getContext(), R.color.assistant_bubble);
         txt = 0xFFE0E0E0;
-        container.setHorizontalGravity(ViewGroup.Gravity.START);
+        container.setHorizontalGravity(Gravity.START);
       }
       messageCard.setCardBackgroundColor(bg);
       messageText.setTextColor(txt);
