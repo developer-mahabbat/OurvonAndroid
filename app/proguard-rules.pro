@@ -1,0 +1,3 @@
+-keepclassmembers class com.ourvon.app.model.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**

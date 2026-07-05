@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/menu_new"
+        android:title="New Chat"
+        android:icon="@android:drawable/ic_input_add"
+        app:showAsAction="ifRoom" />
+    <item android:id="@+id/menu_interrupt"
+        android:title="Stop"
+        android:icon="@android:drawable/ic_media_pause"
+        app:showAsAction="ifRoom" />
+</menu>

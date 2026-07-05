@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/fileToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/surface"
+        app:title="File Browser"
+        app:titleTextColor="@color/on_surface" />
+
+    <TextView
+        android:id="@+id/currentPath"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:textSize="12sp"
+        android:fontFamily="monospace"
+        android:textColor="@color/text_muted"
+        android:background="@color/surface" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/fileList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp" />
+
+    <TextView
+        android:id="@+id/filePreview"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:padding="12dp"
+        android:fontFamily="monospace"
+        android:textSize="11sp"
+        android:textColor="@color/on_surface"
+        android:background="@color/surface"
+        android:visibility="gone"
+        android:scrollbars="vertical" />
+
+</LinearLayout>

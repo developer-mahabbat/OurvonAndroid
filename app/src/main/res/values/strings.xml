@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ourvon</string>
+    <string name="type_message">Ask Ourvon to code, read files, analyze, or build…</string>
+    <string name="save">Save</string>
+</resources>

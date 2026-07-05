@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/nav_sessions"
+        android:title="Session List"
+        android:icon="@android:drawable/ic_menu_recent_history" />
+    <item android:id="@+id/nav_files"
+        android:title="File Browser"
+        android:icon="@android:drawable/ic_menu_folder" />
+    <item android:id="@+id/nav_providers"
+        android:title="Providers"
+        android:icon="@android:drawable/ic_menu_gallery" />
+    <item android:id="@+id/nav_settings"
+        android:title="Settings"
+        android:icon="@android:drawable/ic_menu_preferences" />
+    <item android:id="@+id/nav_disconnect"
+        android:title="Disconnect"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel" />
+</menu>
