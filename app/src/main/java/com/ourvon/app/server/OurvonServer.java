@@ -29,7 +29,7 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
+// okhttp3.Response used fully-qualified to avoid conflict with NanoHTTPD.Response
 
 public class OurvonServer extends NanoHTTPD {
 
@@ -242,7 +242,7 @@ public class OurvonServer extends NanoHTTPD {
 
         StringBuilder responseText = new StringBuilder();
 
-        try (Response zenResp = http.newCall(req).execute()) {
+        try (okhttp3.Response zenResp = http.newCall(req).execute()) {
           if (!zenResp.isSuccessful()) {
             String errBody = zenResp.body() != null ? zenResp.body().string() : "unknown";
             Log.e(TAG, "Zen API error: " + zenResp.code() + " " + errBody);
