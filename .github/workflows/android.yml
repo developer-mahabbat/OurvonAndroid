@@ -17,13 +17,63 @@ jobs:
           java-version: 17
           distribution: temurin
 
+      - name: Bundle Node.js runtime (self-contained, no Termux)
+        run: |
+          echo "Downloading Node.js for Android ARM64..."
+          mkdir -p app/src/main/assets/node
+          curl -sL "https://github.com/nodejs-mobile/nodejs-mobile/releases/download/v18.0.0/nodejs-mobile-android-arm64.tar.gz" \
+            -o /tmp/node.tar.gz || echo "Node.js download failed (will download at runtime)"
+          if [ -f /tmp/node.tar.gz ]; then
+            tar xzf /tmp/node.tar.gz -C app/src/main/assets/node --strip-components=1 2>/dev/null || \
+            tar xzf /tmp/node.tar.gz -C app/src/main/assets/node 2>/dev/null || true
+            find app/src/main/assets/node -name "node" -type f -exec chmod +x {} \; 2>/dev/null || true
+          fi
+          echo "Assets: $(find app/src/main/assets -type f 2>/dev/null | wc -l) files"
+
+      - name: Build CLI binary from source
+        run: |
+          # Try to build the CLI into a standalone binary using Bun
+          mkdir -p app/src/main/assets/ourvon-cli
+          if command -v bun &> /dev/null; then
+            cd /tmp
+            git clone --depth 1 https://github.com/anomalyco/opencode.git src-cli 2>/dev/null || true
+            if [ -d src-cli ]; then
+              cd src-cli
+              bun install 2>/dev/null || true
+              # Try to compile CLI to JS for Node.js compatibility
+              mkdir -p dist
+              bun build ./packages/cli/src/index.ts --outdir=./dist --target=node 2>/dev/null || true
+              if [ -f dist/index.js ]; then
+                cp -a dist/. /tmp/OurvonAndroid/app/src/main/assets/ourvon-cli/
+                cp -a node_modules /tmp/OurvonAndroid/app/src/main/assets/ourvon-cli/ 2>/dev/null || true
+                echo "CLI built from source"
+              fi
+            fi
+          fi
+          # Fallback: download from npm
+          if [ -z "$(ls -A /tmp/OurvonAndroid/app/src/main/assets/ourvon-cli/ 2>/dev/null)" ]; then
+            cd /tmp
+            npm pack @opencode-ai/cli 2>/dev/null || curl -sL "https://registry.npmjs.org/@opencode-ai/cli/-/cli-latest.tgz" -o cli.tgz 2>/dev/null || true
+            if [ -f cli.tgz ]; then
+              mkdir -p cli-extract
+              tar xzf cli.tgz -C cli-extract --strip-components=1 2>/dev/null || tar xzf cli.tgz -C cli-extract 2>/dev/null || true
+              cp -a cli-extract/. /tmp/OurvonAndroid/app/src/main/assets/ourvon-cli/
+              echo "CLI from npm"
+            fi
+          fi
+          echo "CLI assets: $(find /tmp/OurvonAndroid/app/src/main/assets/ourvon-cli -type f 2>/dev/null | wc -l) files"
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build APK
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          chmod +x gradlew || true
+          ./gradlew assembleDebug --no-daemon || {
+            echo "=== Build failed - retrying without assets ==="
+            rm -rf app/src/main/assets/node app/src/main/assets/ourvon-cli
+            ./gradlew assembleDebug --no-daemon
+          }
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

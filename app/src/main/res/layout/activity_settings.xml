@@ -93,7 +93,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Setup Guide"
+            android:text="Self-contained Backend"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/on_surface"
@@ -102,32 +102,35 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Local backend (Termux):"
-            android:textColor="@color/on_surface"
-            android:textStyle="bold"
+            android:text="Ourvon bundles everything it needs."
+            android:textColor="@color/text_muted"
             android:textSize="13sp"
             android:layout_marginBottom="4dp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1. pkg install nodejs"
+            android:text="1. Tap 'Setup Backend' on the main screen"
             android:textColor="@color/text_muted"
-            android:textSize="13sp"
-            android:fontFamily="monospace" />
+            android:textSize="13sp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2. npm install -g ourvon-ai"
+            android:text="2. Downloads Node.js + OURVON CLI (~30MB)"
             android:textColor="@color/text_muted"
-            android:textSize="13sp"
-            android:fontFamily="monospace" />
+            android:textSize="13sp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="3. ourvon serve"
+            android:text="3. Server starts automatically"
             android:textColor="@color/text_muted"
             android:textSize="13sp"
-            android:fontFamily="monospace"
+            android:layout_marginBottom="8dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Termux required. Works offline after setup."
+            android:textColor="@color/accent"
+            android:textSize="12sp"
             android:layout_marginBottom="16dp" />
 
         <TextView

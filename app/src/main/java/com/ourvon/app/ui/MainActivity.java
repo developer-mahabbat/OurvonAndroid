@@ -110,61 +110,60 @@ public class MainActivity extends AppCompatActivity {
         }
       } catch (Exception ignored) {}
 
-      // Second try: attempt to start local backend
+      // Check what state the backend is in
       LocalBackendManager.BackendStatus bs = backend.getStatus();
-      if (bs == LocalBackendManager.BackendStatus.STOPPED ||
-          bs == LocalBackendManager.BackendStatus.NOT_INSTALLED) {
-        runOnUiThread(() -> {
+      runOnUiThread(() -> {
+        if (backend.isSetupNeeded()) {
+          connectBtn.setText("Setup Backend");
+          statusBar.setText("First run: download Node.js + CLI (~30MB)");
+        } else if (bs == LocalBackendManager.BackendStatus.STOPPED) {
           connectBtn.setText("Start Local Backend");
-          connectBtn.setVisibility(View.VISIBLE);
+          statusBar.setText("Backend installed, ready to start");
+        } else {
+          connectBtn.setText("Connect");
           statusBar.setText("Backend: " + bs.name());
-        });
-      }
+        }
+        connectBtn.setVisibility(View.VISIBLE);
+      });
     }).start();
   }
 
   private void connect() {
     LocalBackendManager.BackendStatus bs = backend.getStatus();
 
-    if (bs == LocalBackendManager.BackendStatus.NOT_INSTALLED) {
-      // Show setup guide
-      showSetupGuide();
+    if (backend.isSetupNeeded()) {
+      // Self-contained setup: download Node.js + CLI
+      connectBtn.setText("Downloading...");
+      connectBtn.setEnabled(false);
+      statusBar.setText("Setting up OURVON backend...");
+
+      backend.setupBackend(new LocalBackendManager.SetupCallback() {
+        @Override public void onProgress(String msg, int pct) {
+          runOnUiThread(() -> statusBar.setText(msg));
+        }
+        @Override public void onResult(boolean success, String msg) {
+          runOnUiThread(() -> {
+            connectBtn.setEnabled(true);
+            if (success) {
+              statusBar.setText("Backend installed. Starting...");
+              startBackend();
+            } else {
+              connectBtn.setText("Retry Setup");
+              statusBar.setText("Setup failed: " + msg);
+              Snackbar.make(chatList, "Download failed. Check internet.", Snackbar.LENGTH_LONG).show();
+            }
+          });
+        }
+      });
       return;
     }
 
     if (bs == LocalBackendManager.BackendStatus.STOPPED) {
-      // Start the backend
-      connectBtn.setText("Starting...");
-      connectBtn.setEnabled(false);
-      statusBar.setText("Starting OURVON backend...");
-
-      backend.startServer((success, msg) -> runOnUiThread(() -> {
-        connectBtn.setEnabled(true);
-        if (success) {
-          // Now connect the client
-          new Thread(() -> {
-            try {
-              if (client.checkHealth()) {
-                runOnUiThread(() -> onConnected(msg));
-              } else {
-                connectBtn.setText("Connect");
-                statusBar.setText("Backend started but unreachable");
-              }
-            } catch (Exception e) {
-              connectBtn.setText("Connect");
-              statusBar.setText("Error: " + e.getMessage());
-            }
-          }).start();
-        } else {
-          connectBtn.setText("Retry");
-          statusBar.setText("Failed: " + msg);
-          Toast.makeText(this, "Start failed: " + msg, Toast.LENGTH_LONG).show();
-        }
-      }));
+      startBackend();
       return;
     }
 
-    // Backend is running, connect client
+    // Backend is already running, connect
     connectBtn.setText("Connecting...");
     connectBtn.setEnabled(false);
     new Thread(() -> {
@@ -186,6 +185,35 @@ public class MainActivity extends AppCompatActivity {
         });
       }
     }).start();
+  }
+
+  private void startBackend() {
+    connectBtn.setText("Starting...");
+    connectBtn.setEnabled(false);
+    statusBar.setText("Starting OURVON backend...");
+
+    backend.startServer((success, msg) -> runOnUiThread(() -> {
+      connectBtn.setEnabled(true);
+      if (success) {
+        new Thread(() -> {
+          try {
+            if (client.checkHealth()) {
+              runOnUiThread(() -> onConnected(msg));
+            } else {
+              connectBtn.setText("Connect");
+              statusBar.setText("Backend started but unreachable");
+            }
+          } catch (Exception e) {
+            connectBtn.setText("Connect");
+            statusBar.setText("Error: " + e.getMessage());
+          }
+        }).start();
+      } else {
+        connectBtn.setText("Retry");
+        statusBar.setText("Failed: " + msg);
+        Toast.makeText(this, "Start failed: " + msg, Toast.LENGTH_LONG).show();
+      }
+    }));
   }
 
   private void onConnected(String msg) {
