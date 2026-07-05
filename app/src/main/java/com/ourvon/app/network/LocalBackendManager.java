@@ -452,7 +452,8 @@ public class LocalBackendManager {
           lastProgress = now;
           int pct = total > 0 ? (downloaded * 100 / total) : -1;
           final int fp = pct;
-          runOnMain(() -> cb.onProgress("Downloading... " + (fp >= 0 ? fp + "%" : downloaded/1024 + "KB"), fp >= 0 ? fp / 2 : -1));
+          final int dlKb = downloaded / 1024;
+          runOnMain(() -> cb.onProgress("Downloading... " + (fp >= 0 ? fp + "%" : dlKb + "KB"), fp >= 0 ? fp / 2 : -1));
         }
       }
     }
