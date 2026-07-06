@@ -47,14 +47,14 @@
             app:layout_constraintEnd_toEndOf="parent" />
 
         <!-- Setup card (shown before backend is ready) -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/setupCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="32dp"
             android:visibility="visible"
             app:cardBackgroundColor="@color/background"
-            app:cardCornerRadius="16dp"
+            app:cornerRadius="16dp"
             app:cardElevation="2dp"
             app:cardUseCompatPadding="true"
             app:layout_constraintTop_toBottomOf="@id/statusBar"
@@ -134,17 +134,16 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/inputCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:visibility="gone"
             app:cardBackgroundColor="@color/input_bg"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="4dp"
-            app:cardStrokeColor="@color/input_border"
-            app:cardStrokeWidth="1dp"
+            app:strokeColor="@color/input_border"
+            app:strokeWidth="1dp"
+            app:cornerRadius="24dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">

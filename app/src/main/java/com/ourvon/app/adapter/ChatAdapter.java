@@ -8,7 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
+import com.google.android.material.card.MaterialCardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
@@ -55,7 +55,7 @@ public class ChatAdapter extends ListAdapter<ApiModels.Message, ChatAdapter.Hold
 
   static class Holder extends RecyclerView.ViewHolder {
     private final TextView roleLabel, messageText;
-    private final CardView messageCard;
+    private final MaterialCardView messageCard;
     private final LinearLayout container;
 
     Holder(@NonNull View v) {
