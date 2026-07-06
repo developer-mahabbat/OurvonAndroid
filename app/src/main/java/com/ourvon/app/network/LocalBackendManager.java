@@ -61,9 +61,12 @@ public class LocalBackendManager {
   public boolean isOpencodeInstalled() {
     File npx = new File(UBUNTU_ROOTFS + "/usr/bin/npx");
     if (!npx.exists()) return false;
-    // Check if @opencode-ai/cli is installed globally
-    String result = execInUbuntu("npm list -g @opencode-ai/cli 2>/dev/null | grep -c @opencode-ai");
-    return result != null && result.trim().equals("1");
+    try {
+      String result = execInUbuntu("npm list -g @opencode-ai/cli 2>/dev/null | grep -c @opencode-ai");
+      return result != null && result.trim().equals("1");
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   public boolean isNpxInstalled() {
