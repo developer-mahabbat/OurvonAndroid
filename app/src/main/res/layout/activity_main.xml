@@ -16,12 +16,20 @@
             android:id="@+id/toolbar"
             android:layout_width="0dp"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/surface"
+            android:background="@color/background"
             app:title="Ourvon"
             app:titleTextColor="@color/on_surface"
-            app:subtitleTextColor="@color/text_muted"
+            app:titleCentered="true"
             app:menu="@menu/main_menu"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:background="@color/divider"
+            app:layout_constraintTop_toBottomOf="@id/toolbar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -30,13 +38,88 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:paddingHorizontal="16dp"
-            android:paddingVertical="4dp"
+            android:paddingVertical="6dp"
             android:textSize="12sp"
             android:textColor="@color/text_muted"
-            android:background="@color/surface"
+            android:background="@color/surface_variant"
             app:layout_constraintTop_toBottomOf="@id/toolbar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Setup card (shown before backend is ready) -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/setupCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="32dp"
+            android:visibility="visible"
+            app:cardBackgroundColor="@color/background"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardUseCompatPadding="true"
+            app:layout_constraintTop_toBottomOf="@id/statusBar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="32dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="OURVON CLI"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="open-code assistant"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_muted"
+                    android:layout_marginBottom="32dp" />
+
+                <ProgressBar
+                    android:id="@+id/setupProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:visibility="gone"
+                    android:progressTint="@color/primary"
+                    android:progressBackgroundTint="@color/divider"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:id="@+id/setupLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Setting up..."
+                    android:textColor="@color/on_surface_variant"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:layout_marginBottom="24dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/connectBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="56dp"
+                    android:text="Install opencode"
+                    android:textSize="16sp"
+                    android:visibility="gone"
+                    app:cornerRadius="28dp"
+                    app:icon="@drawable/ic_compass"
+                    app:iconGravity="textStart" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/chatList"
@@ -45,6 +128,7 @@
             android:padding="8dp"
             android:paddingBottom="4dp"
             android:clipToPadding="false"
+            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/statusBar"
             app:layout_constraintBottom_toTopOf="@id/inputCard"
             app:layout_constraintStart_toStartOf="parent"
@@ -56,9 +140,11 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             android:visibility="gone"
-            app:cardBackgroundColor="@color/surface"
+            app:cardBackgroundColor="@color/input_bg"
             app:cardCornerRadius="24dp"
             app:cardElevation="4dp"
+            app:cardStrokeColor="@color/input_border"
+            app:cardStrokeWidth="1dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
@@ -82,8 +168,7 @@
                     android:padding="12dp"
                     android:textColor="@color/on_surface"
                     android:textColorHint="@color/text_muted"
-                    android:textSize="14sp"
-                    android:fontFamily="monospace" />
+                    android:textSize="14sp" />
 
                 <ImageButton
                     android:id="@+id/sendBtn"
@@ -98,17 +183,6 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-            android:id="@+id/connectBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:text="Connect"
-            android:visibility="gone"
-            app:icon="@drawable/ic_compass"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/inputCard" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Navigation drawer -->
@@ -117,7 +191,7 @@
         android:layout_width="280dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@color/surface"
+        android:background="@color/background"
         app:menu="@menu/nav_menu"
         app:itemTextColor="@color/on_surface"
         app:itemIconTint="@color/primary" />

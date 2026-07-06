@@ -17,8 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.ourvon.app.R;
 import com.ourvon.app.model.ApiModels;
 
-import java.util.List;
-
 public class ChatAdapter extends ListAdapter<ApiModels.Message, ChatAdapter.Holder> {
 
   public ChatAdapter() {
@@ -56,7 +54,7 @@ public class ChatAdapter extends ListAdapter<ApiModels.Message, ChatAdapter.Hold
   }
 
   static class Holder extends RecyclerView.ViewHolder {
-    private final TextView roleLabel, messageText, toolInfo;
+    private final TextView roleLabel, messageText;
     private final CardView messageCard;
     private final LinearLayout container;
 
@@ -64,54 +62,41 @@ public class ChatAdapter extends ListAdapter<ApiModels.Message, ChatAdapter.Hold
       super(v);
       roleLabel = v.findViewById(R.id.roleLabel);
       messageText = v.findViewById(R.id.messageText);
-      toolInfo = v.findViewById(R.id.toolInfo);
       messageCard = v.findViewById(R.id.messageCard);
       container = v.findViewById(R.id.messageContainer);
     }
 
     void bind(ApiModels.Message msg) {
       boolean isUser = "user".equals(msg.role);
-      roleLabel.setText(isUser ? "You" : "Ourvon");
+      roleLabel.setText(isUser ? "You" : "OURVON");
 
       StringBuilder text = new StringBuilder();
-      StringBuilder tools = new StringBuilder();
-
       if (msg.content != null) {
         for (ApiModels.ContentPart p : msg.content) {
           if ("text".equals(p.type) && p.text != null) {
             text.append(p.text);
           }
-          if (p.toolCall != null) {
-            String s = p.toolCall.state != null ? p.toolCall.state : "running";
-            String icon = "running".equals(s) ? "\u25B6" :
-                          "success".equals(s) ? "\u2713" :
-                          "failed".equals(s) ? "\u2717" : "\u25B6";
-            tools.append(icon).append(" ").append(p.toolCall.name).append("\n");
-          }
-          if (p.toolResult != null) {
-            tools.append("\u2514 ").append(p.toolResult.success ? "\u2713" : "\u2717")
-                 .append(" ").append(p.toolResult.name).append("\n");
-          }
         }
       }
 
       messageText.setText(text.length() > 0 ? text.toString() : (isUser ? "" : "..."));
-      toolInfo.setText(tools.length() > 0 ? tools.toString().trim() : "");
-      toolInfo.setVisibility(tools.length() > 0 ? View.VISIBLE : View.GONE);
 
-      int bg, txt;
       if (isUser) {
-        bg = ContextCompat.getColor(itemView.getContext(), R.color.user_bubble);
-        txt = 0xFFFFFFFF;
+        // User: orange bubble, right-aligned
+        messageCard.setCardBackgroundColor(
+            ContextCompat.getColor(itemView.getContext(), R.color.user_bubble));
+        messageText.setTextColor(0xFFFFFFFF);
         container.setHorizontalGravity(Gravity.END);
+        roleLabel.setGravity(Gravity.END);
       } else {
-        bg = ContextCompat.getColor(itemView.getContext(), R.color.assistant_bubble);
-        txt = 0xFFE0E0E0;
+        // Assistant: light gray bubble, left-aligned
+        messageCard.setCardBackgroundColor(
+            ContextCompat.getColor(itemView.getContext(), R.color.assistant_bubble));
+        messageText.setTextColor(
+            ContextCompat.getColor(itemView.getContext(), R.color.assistant_bubble_text));
         container.setHorizontalGravity(Gravity.START);
+        roleLabel.setGravity(Gravity.START);
       }
-      messageCard.setCardBackgroundColor(bg);
-      messageText.setTextColor(txt);
-      toolInfo.setTextColor(txt);
     }
   }
 }
