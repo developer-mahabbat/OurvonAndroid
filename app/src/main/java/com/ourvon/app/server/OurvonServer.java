@@ -48,7 +48,6 @@ public class OurvonServer extends NanoHTTPD {
     volatile boolean interrupted;
     Thread agentThread;
     long createdAt = System.currentTimeMillis();
-    PipedOutputStream eventOutput;
 
     Session(String id) { this.id = id; }
   }
@@ -256,15 +255,8 @@ public class OurvonServer extends NanoHTTPD {
   }
 
   private void postSse(Session s, String type, Map<String, Object> data) {
-    String id = UUID.randomUUID().toString();
-    String json = gson.toJson(data);
-    String sse = "id: " + id + "\nevent: " + type + "\ndata: " + json + "\n\n";
     synchronized (s.eventLock) {
-      s.eventQueue.add(map("id", id, "type", type, "data", data));
-      if (s.eventOutput != null) {
-        try { s.eventOutput.write(sse.getBytes("UTF-8")); s.eventOutput.flush(); }
-        catch (IOException ignored) {}
-      }
+      s.eventQueue.add(map("id", UUID.randomUUID().toString(), "type", type, "data", data));
       s.eventLock.notifyAll();
     }
   }
@@ -277,7 +269,6 @@ public class OurvonServer extends NanoHTTPD {
     try {
       PipedInputStream in = new PipedInputStream();
       PipedOutputStream out = new PipedOutputStream(in);
-      s.eventOutput = out;
 
       Thread writer = new Thread(() -> {
         try {
@@ -349,7 +340,6 @@ public class OurvonServer extends NanoHTTPD {
     for (Session s : sessions.values()) {
       s.interrupted = true;
       if (s.agentThread != null) s.agentThread.interrupt();
-      if (s.eventOutput != null) try { s.eventOutput.close(); } catch (IOException ignored) {}
     }
     super.stop();
   }

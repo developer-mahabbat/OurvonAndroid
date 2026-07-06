@@ -184,9 +184,10 @@ public class MainActivity extends AppCompatActivity {
             addPlaceholder();
             break;
           case "session.next.text.delta":
-            if (pendingMsgId != null && ev.containsKey("text"))
+            if (pendingMsgId != null && ev.containsKey("text")) {
               pendingText.append(ev.get("text"));
-            updatePlaceholder(pendingText.toString());
+              updatePlaceholder(pendingText.toString());
+            }
             break;
           case "session.next.text.ended":
           case "session.idle":
