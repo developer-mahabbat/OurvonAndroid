@@ -35,6 +35,6 @@
             android:lineSpacingExtra="4sp"
             android:textColor="@color/on_surface" />
 
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>
