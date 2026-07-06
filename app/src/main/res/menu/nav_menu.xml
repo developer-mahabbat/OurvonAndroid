@@ -1,18 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/nav_sessions"
-        android:title="Session List"
-        android:icon="@drawable/ic_history" />
-    <item android:id="@+id/nav_files"
-        android:title="File Browser"
-        android:icon="@drawable/ic_folder" />
-    <item android:id="@+id/nav_providers"
-        android:title="Providers"
-        android:icon="@drawable/ic_gallery" />
+        android:title="New Chat" />
     <item android:id="@+id/nav_settings"
-        android:title="Settings"
-        android:icon="@drawable/ic_settings" />
+        android:title="Settings" />
     <item android:id="@+id/nav_disconnect"
-        android:title="Disconnect"
-        android:icon="@drawable/ic_close" />
+        android:title="Disconnect" />
 </menu>
