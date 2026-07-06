@@ -1,325 +1,218 @@
 package com.ourvon.app.ui;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import com.ourvon.app.R;
 import com.ourvon.app.adapter.ChatAdapter;
 import com.ourvon.app.model.ApiModels;
-import com.ourvon.app.network.LocalBackendManager;
-import com.ourvon.app.network.OurvonClient;
+import com.ourvon.app.service.NodeService;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import okhttp3.sse.EventSource;
-import okhttp3.sse.EventSourceListener;
 
 public class MainActivity extends AppCompatActivity {
 
-  private static final String PREFS = "ourvon_prefs";
-  private static final String KEY_URL = "server_url";
+  private static final String BASE = "http://127.0.0.1:4097";
 
-  private OurvonClient client;
-  private LocalBackendManager backend;
   private ChatAdapter adapter;
   private RecyclerView chatList;
   private EditText inputText;
-  private View inputCard;
+  private View progressOverlay;
   private TextView statusBar;
-  private DrawerLayout drawer;
-
-  private String sessionId;
-  private final List<ApiModels.Message> messages = new ArrayList<>();
-  private EventSource sse;
-  private String pendingMsgId;
-  private final StringBuilder pendingText = new StringBuilder();
-  private final Gson gson = new GsonBuilder().create();
+  private Gson gson = new Gson();
+  private List<ApiModels.Message> messages = new ArrayList<>();
+  private volatile boolean streaming = false;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    drawer = findViewById(R.id.drawerLayout);
     chatList = findViewById(R.id.chatList);
     inputText = findViewById(R.id.inputText);
-    inputCard = findViewById(R.id.inputCard);
+    progressOverlay = findViewById(R.id.progressOverlay);
     statusBar = findViewById(R.id.statusBar);
-    View sendBtn = findViewById(R.id.sendBtn);
-    NavigationView nav = findViewById(R.id.navView);
-    setSupportActionBar(findViewById(R.id.toolbar));
 
     adapter = new ChatAdapter();
     chatList.setLayoutManager(new LinearLayoutManager(this));
     chatList.setAdapter(adapter);
 
-    sendBtn.setOnClickListener(v -> send());
-    nav.setNavigationItemSelectedListener(this::onNav);
+    findViewById(R.id.sendBtn).setOnClickListener(v -> send());
+    findViewById(R.id.newChatBtn).setOnClickListener(v -> newChat());
 
-    backend = new LocalBackendManager(this);
-    loadPrefs();
-    startEmbeddedServer();
+    // Start the Node.js engine service
+    startService(new Intent(this, NodeService.class));
+    statusBar.setText("Starting engine...");
+    waitForServer();
   }
 
-  private void loadPrefs() {
-    SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
-    String url = p.getString(KEY_URL, "127.0.0.1:4096");
-    client = new OurvonClient(url, "ourvon", "");
-  }
-
-  private void startEmbeddedServer() {
-    statusBar.setText("Starting server...");
-    backend.startServer((success, msg) -> runOnUiThread(() -> {
-      if (success) {
-        loadPrefs();
-        connectToServer();
-      } else {
-        statusBar.setText("Failed: " + msg);
-        Snackbar.make(chatList, "Server error: " + msg, Snackbar.LENGTH_LONG).show();
-      }
-    }));
-  }
-
-  private void connectToServer() {
-    statusBar.setText("Connecting...");
+  private void waitForServer() {
+    progressOverlay.setVisibility(View.VISIBLE);
     new Thread(() -> {
-      try {
-        Thread.sleep(500);
-        if (client.checkHealth()) {
-          runOnUiThread(() -> {
-            statusBar.setText("OURVON ready");
-            inputCard.setVisibility(View.VISIBLE);
-            Snackbar.make(chatList, "Connected", Snackbar.LENGTH_SHORT).show();
-            createOrResumeSession();
-          });
-        } else {
-          runOnUiThread(() -> statusBar.setText("Server unreachable"));
-        }
-      } catch (Exception e) {
-        runOnUiThread(() -> statusBar.setText("Error: " + e.getMessage()));
+      for (int i = 0; i < 60; i++) {
+        try { Thread.sleep(1000); } catch (InterruptedException e) { return; }
+        try {
+          HttpURLConnection c = (HttpURLConnection) new URL(BASE + "/api/health").openConnection();
+          c.setConnectTimeout(2000);
+          c.setReadTimeout(2000);
+          if (c.getResponseCode() == 200) {
+            runOnUiThread(() -> {
+              statusBar.setText("Ready");
+              progressOverlay.setVisibility(View.GONE);
+              adapter.submitList(new ArrayList<>(messages));
+            });
+            return;
+          }
+          c.disconnect();
+        } catch (Exception ignored) {}
       }
-    }).start();
-  }
-
-  private void createOrResumeSession() {
-    new Thread(() -> {
-      try {
-        List<ApiModels.SessionInfo> sessions = client.listSessions(1);
-        if (sessions != null && !sessions.isEmpty()) {
-          sessionId = sessions.get(0).id;
-          loadMessages();
-        } else {
-          ApiModels.SessionInfo s = client.createSession(null, null);
-          if (s != null) sessionId = s.id;
-        }
-        if (sessionId != null) subscribe();
-      } catch (Exception e) {
-        runOnUiThread(() -> statusBar.setText("Session: " + e.getMessage()));
-      }
-    }).start();
-  }
-
-  private void loadMessages() {
-    new Thread(() -> {
-      try {
-        List<ApiModels.Message> msgs = client.getMessages(sessionId, 50);
-        runOnUiThread(() -> {
-          messages.clear();
-          if (msgs != null) messages.addAll(msgs);
-          adapter.submitList(new ArrayList<>(messages));
-          chatList.smoothScrollToPosition(messages.size() - 1);
-        });
-      } catch (Exception ignored) {}
-    }).start();
-  }
-
-  private void subscribe() {
-    if (sse != null) sse.cancel();
-    sse = client.subscribeEvents(sessionId, new EventSourceListener() {
-      @Override public void onOpen(@NonNull EventSource s, @NonNull okhttp3.Response r) {
-        runOnUiThread(() -> statusBar.setText("Connected"));
-      }
-      @Override public void onEvent(@NonNull EventSource s, String id, String type, @NonNull String data) {
-        handleEvent(type, data);
-      }
-      @Override public void onFailure(@NonNull EventSource s, Throwable t, okhttp3.Response r) {
-        if (t != null) runOnUiThread(() -> statusBar.setText(t.getMessage()));
-      }
-    });
-  }
-
-  private void handleEvent(String type, String data) {
-    try {
-      Map<String, Object> ev = gson.fromJson(data, new TypeToken<Map<String, Object>>(){}.getType());
-      if (ev == null) return;
-
       runOnUiThread(() -> {
-        switch (type) {
-          case "session.next.prompt.admitted":
-            pendingMsgId = UUID.randomUUID().toString();
-            pendingText.setLength(0);
-            addPlaceholder();
-            break;
-          case "session.next.text.delta":
-            if (pendingMsgId != null && ev.containsKey("text")) {
-              pendingText.append(ev.get("text"));
-              updatePlaceholder(pendingText.toString());
-            }
-            break;
-          case "session.next.tool.called":
-            if (ev.containsKey("name"))
-              pendingText.append("\n\n\u25B6 Using ").append(ev.get("name")).append("...");
-            updatePlaceholder(pendingText.toString());
-            break;
-          case "session.next.tool.result":
-            if (ev.containsKey("result"))
-              pendingText.append("\n\u2514 Result received");
-            updatePlaceholder(pendingText.toString());
-            break;
-          case "session.next.step.ended":
-          case "session.next.text.ended":
-          case "session.idle":
-            pendingMsgId = null;
-            loadMessages();
-            break;
-        }
+        statusBar.setText("Timeout - restart app");
+        progressOverlay.setVisibility(View.GONE);
       });
-    } catch (Exception ignored) {}
-  }
-
-  private void addPlaceholder() {
-    ApiModels.Message m = new ApiModels.Message();
-    m.id = pendingMsgId;
-    m.role = "assistant";
-    ApiModels.ContentPart c = new ApiModels.ContentPart();
-    c.type = "text";
-    c.text = "";
-    m.content = Collections.singletonList(c);
-    m.createdAt = System.currentTimeMillis();
-    messages.add(m);
-    adapter.submitList(new ArrayList<>(messages));
-    chatList.smoothScrollToPosition(messages.size() - 1);
-  }
-
-  private void updatePlaceholder(String text) {
-    for (int i = messages.size() - 1; i >= 0; i--) {
-      if (pendingMsgId != null && pendingMsgId.equals(messages.get(i).id)) {
-        if (messages.get(i).content != null && !messages.get(i).content.isEmpty()) {
-          messages.get(i).content.get(0).text = text;
-          adapter.notifyItemChanged(i);
-          chatList.smoothScrollToPosition(messages.size() - 1);
-        }
-        return;
-      }
-    }
+    }).start();
   }
 
   private void send() {
     String text = inputText.getText().toString().trim();
-    if (TextUtils.isEmpty(text)) return;
-    if (sessionId == null) {
-      Toast.makeText(this, "Backend not connected", Toast.LENGTH_SHORT).show();
-      return;
-    }
+    if (text.isEmpty() || streaming) return;
     inputText.setText("");
 
-    ApiModels.Message m = new ApiModels.Message();
-    m.id = UUID.randomUUID().toString();
-    m.role = "user";
-    ApiModels.ContentPart c = new ApiModels.ContentPart();
-    c.type = "text";
-    c.text = text;
-    m.content = Collections.singletonList(c);
-    m.createdAt = System.currentTimeMillis();
-    messages.add(m);
+    ApiModels.Message userMsg = new ApiModels.Message("user", text);
+    messages.add(userMsg);
     adapter.submitList(new ArrayList<>(messages));
-    chatList.smoothScrollToPosition(messages.size() - 1);
+    chatList.smoothScrollToPosition(adapter.getItemCount() - 1);
+
+    streaming = true;
 
     new Thread(() -> {
-      try { client.sendPrompt(sessionId, text); }
-      catch (Exception e) {
-        runOnUiThread(() ->
-            Snackbar.make(chatList, "Send failed: " + e.getMessage(), Snackbar.LENGTH_LONG).show());
+      try {
+        // Build request body
+        StringBuilder jsonBody = new StringBuilder();
+        jsonBody.append("{\"messages\":[");
+        for (int i = 0; i < messages.size(); i++) {
+          ApiModels.Message m = messages.get(i);
+          jsonBody.append("{\"role\":\"").append(m.role).append("\",\"content\":\"");
+          jsonBody.append(escape(m.text != null ? m.text : "")).append("\"}");
+          if (i < messages.size() - 1) jsonBody.append(",");
+        }
+        jsonBody.append("]}");
+
+        URL url = new URL(BASE + "/api/chat");
+        HttpURLConnection c = (HttpURLConnection) url.openConnection();
+        c.setRequestMethod("POST");
+        c.setRequestProperty("Content-Type", "application/json");
+        c.setDoOutput(true);
+        c.setConnectTimeout(10000);
+        c.setReadTimeout(0); // no timeout for streaming
+        OutputStream os = c.getOutputStream();
+        os.write(jsonBody.toString().getBytes("UTF-8"));
+        os.flush();
+        os.close();
+
+        int status = c.getResponseCode();
+        if (status != 200) {
+          runOnUiThread(() -> Toast.makeText(this, "Server error: " + status, Toast.LENGTH_SHORT).show());
+          streaming = false;
+          return;
+        }
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream(), "UTF-8"));
+        String line;
+        ApiModels.Message currentAssistant = null;
+        StringBuilder assistantText = new StringBuilder();
+
+        while ((line = reader.readLine()) != null) {
+          if (line.startsWith("event: ")) {
+            String eventType = line.substring(7).trim();
+            String dataLine = reader.readLine();
+            if (dataLine == null) break;
+            if (dataLine.startsWith("data: ")) {
+              String data = dataLine.substring(6);
+              handleSseEvent(eventType, data, currentAssistant, assistantText);
+            }
+          }
+        }
+        reader.close();
+        c.disconnect();
+
+        // Finalize
+        if (assistantText.length() > 0) {
+          messages.add(new ApiModels.Message("assistant", assistantText.toString()));
+        }
+        runOnUiThread(() -> {
+          adapter.submitList(new ArrayList<>(messages));
+          streaming = false;
+        });
+
+      } catch (Exception e) {
+        runOnUiThread(() -> {
+          Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+          streaming = false;
+        });
       }
     }).start();
   }
 
-  private boolean onNav(@NonNull MenuItem item) {
-    drawer.close();
-    int id = item.getItemId();
-    if (id == R.id.nav_files) startActivity(new Intent(this, FileBrowserActivity.class));
-    else if (id == R.id.nav_providers) startActivity(new Intent(this, ProvidersActivity.class));
-    else if (id == R.id.nav_settings) startActivity(new Intent(this, SettingsActivity.class));
-    else if (id == R.id.nav_disconnect) disconnect();
-    return true;
+  private void handleSseEvent(String type, String data, ApiModels.Message current, StringBuilder text) {
+    runOnUiThread(() -> {
+      try {
+        switch (type) {
+          case "session.next.prompt.admitted":
+            text.setLength(0);
+            break;
+          case "session.next.text.delta": {
+            com.google.gson.JsonObject obj = com.google.gson.JsonParser.parseString(data).getAsJsonObject();
+            if (obj.has("text")) {
+              text.append(obj.get("text").getAsString());
+              // Create a temp message for display
+              List<ApiModels.Message> display = new ArrayList<>(messages);
+              display.add(new ApiModels.Message("assistant", text.toString()));
+              adapter.submitList(display);
+              chatList.smoothScrollToPosition(adapter.getItemCount() - 1);
+            }
+            break;
+          }
+          case "session.next.text.ended":
+          case "session.next.step.ended":
+          case "session.idle":
+            break;
+        }
+      } catch (Exception ignored) {}
+    });
+  }
+
+  private void newChat() {
+    messages.clear();
+    adapter.submitList(new ArrayList<>());
+  }
+
+  private String escape(String s) {
+    return s.replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t");
   }
 
   @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    getMenuInflater().inflate(R.menu.main_menu, menu);
-    return true;
-  }
-
-  @Override
-  public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-    if (item.getItemId() == R.id.menu_new) newSession();
-    else if (item.getItemId() == R.id.menu_interrupt) interrupt();
-    return super.onOptionsItemSelected(item);
-  }
-
-  private void newSession() {
-    if (sse != null) sse.cancel();
-    messages.clear();
-    adapter.submitList(new ArrayList<>());
-    sessionId = null;
-    pendingMsgId = null;
-    pendingText.setLength(0);
-    createOrResumeSession();
-  }
-
-  private void interrupt() {
-    if (sessionId == null) return;
-    new Thread(() -> {
-      try { client.interruptSession(sessionId); runOnUiThread(() -> statusBar.setText("Interrupted")); }
-      catch (Exception e) { runOnUiThread(() -> statusBar.setText("Interrupt failed")); }
-    }).start();
-  }
-
-  private void disconnect() {
-    if (sse != null) sse.cancel();
-    backend.stopServer();
-    sessionId = null;
-    messages.clear();
-    adapter.submitList(new ArrayList<>());
-    inputCard.setVisibility(View.GONE);
-    statusBar.setText("Disconnected");
-  }
-
-  @Override protected void onDestroy() {
+  protected void onDestroy() {
     super.onDestroy();
-    if (sse != null) sse.cancel();
   }
 }

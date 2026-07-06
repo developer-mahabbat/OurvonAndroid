@@ -1,5 +1,6 @@
 package com.ourvon.app.adapter;
 
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,10 +24,12 @@ public class ChatAdapter extends ListAdapter<ApiModels.Message, ChatAdapter.Hold
     super(new DiffUtil.ItemCallback<ApiModels.Message>() {
       @Override
       public boolean areItemsTheSame(@NonNull ApiModels.Message a, @NonNull ApiModels.Message b) {
-        return a.id != null && a.id.equals(b.id);
+        if (a.id != null && b.id != null) return a.id.equals(b.id);
+        return a == b;
       }
       @Override
       public boolean areContentsTheSame(@NonNull ApiModels.Message a, @NonNull ApiModels.Message b) {
+        if (a.text != null && b.text != null) return a.text.equals(b.text);
         if (a.content == null && b.content == null) return true;
         if (a.content == null || b.content == null) return false;
         if (a.content.size() != b.content.size()) return false;
@@ -70,16 +73,19 @@ public class ChatAdapter extends ListAdapter<ApiModels.Message, ChatAdapter.Hold
       boolean isUser = "user".equals(msg.role);
       roleLabel.setText(isUser ? "You" : "OURVON");
 
-      StringBuilder text = new StringBuilder();
-      if (msg.content != null) {
+      String displayText = "";
+      if (!TextUtils.isEmpty(msg.text)) {
+        displayText = msg.text;
+      } else if (msg.content != null) {
+        StringBuilder sb = new StringBuilder();
         for (ApiModels.ContentPart p : msg.content) {
-          if ("text".equals(p.type) && p.text != null) {
-            text.append(p.text);
-          }
+          if ("text".equals(p.type) && p.text != null) sb.append(p.text);
         }
+        displayText = sb.toString();
       }
+      if (TextUtils.isEmpty(displayText)) displayText = isUser ? "" : "...";
 
-      messageText.setText(text.length() > 0 ? text.toString() : (isUser ? "" : "..."));
+      messageText.setText(displayText);
 
       if (isUser) {
         // User: orange bubble, right-aligned

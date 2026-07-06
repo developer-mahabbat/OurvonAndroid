@@ -20,6 +20,21 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Download Node.js Mobile binaries
+        run: |
+          curl -sL "https://github.com/nodejs-mobile/nodejs-mobile/releases/download/v18.20.4/nodejs-mobile-v18.20.4-android.zip" -o /tmp/nodejs-mobile.zip
+          unzip -o /tmp/nodejs-mobile.zip -d /tmp/nodejs-mobile-bin
+          mkdir -p app/libnode/bin/arm64-v8a app/libnode/bin/armeabi-v7a app/libnode/bin/x86_64
+          cp /tmp/nodejs-mobile-bin/bin/arm64-v8a/libnode.so app/libnode/bin/arm64-v8a/
+          cp /tmp/nodejs-mobile-bin/bin/armeabi-v7a/libnode.so app/libnode/bin/armeabi-v7a/
+          cp /tmp/nodejs-mobile-bin/bin/x86_64/libnode.so app/libnode/bin/x86_64/
+          ls -lh app/libnode/bin/*/libnode.so
+
+      - name: Install NDK
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.0.12077973" || true
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125" || true
+
       - name: Build APK
         run: |
           chmod +x gradlew || true

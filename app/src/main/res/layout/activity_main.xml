@@ -22,7 +22,19 @@
             app:menu="@menu/main_menu"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageButton
+                android:id="@+id/newChatBtn"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_input_add"
+                android:contentDescription="New Chat"
+                android:tint="@color/primary" />
+
+        </com.google.android.material.appbar.MaterialToolbar>
 
         <View
             android:layout_width="0dp"
@@ -37,11 +49,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:paddingHorizontal="16dp"
-            android:paddingVertical="6dp"
+            android:paddingVertical="4dp"
             android:textSize="11sp"
             android:fontFamily="monospace"
             android:textColor="@color/text_muted"
             android:background="@color/background"
+            android:text="Initializing..."
             app:layout_constraintTop_toBottomOf="@id/toolbar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -53,6 +66,7 @@
             android:padding="8dp"
             android:paddingBottom="4dp"
             android:clipToPadding="false"
+            android:overScrollMode="never"
             app:layout_constraintTop_toBottomOf="@id/statusBar"
             app:layout_constraintBottom_toTopOf="@id/inputCard"
             app:layout_constraintStart_toStartOf="parent"
@@ -63,7 +77,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:visibility="gone"
             app:cardBackgroundColor="@color/input_bg"
             app:strokeColor="@color/input_border"
             app:strokeWidth="1dp"
@@ -85,7 +98,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:background="@android:color/transparent"
-                    android:hint="$ "
+                    android:hint="Ask Ourvon..."
                     android:inputType="textMultiLine|textNoSuggestions"
                     android:maxLines="4"
                     android:padding="12dp"
@@ -100,12 +113,45 @@
                     android:layout_height="48dp"
                     android:layout_marginEnd="4dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_send"
+                    android:src="@android:drawable/ic_menu_send"
                     android:contentDescription="Send"
-                    app:tint="@color/primary" />
+                    android:tint="@color/primary" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <FrameLayout
+            android:id="@+id/progressOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#CC000000"
+            android:visibility="gone"
+            android:clickable="true">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="32dp">
+
+                <ProgressBar
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:indeterminateTint="@color/primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Starting Node.js engine..."
+                    android:textColor="@color/primary"
+                    android:textSize="14sp"
+                    android:fontFamily="monospace" />
+
+            </LinearLayout>
+        </FrameLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

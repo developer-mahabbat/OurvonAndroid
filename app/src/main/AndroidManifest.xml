@@ -3,6 +3,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -22,20 +25,10 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".ui.SettingsActivity"
-            android:label="Server Settings"
-            android:parentActivityName=".ui.MainActivity" />
-
-        <activity
-            android:name=".ui.FileBrowserActivity"
-            android:label="File Browser"
-            android:parentActivityName=".ui.MainActivity" />
-
-        <activity
-            android:name=".ui.ProvidersActivity"
-            android:label="Providers"
-            android:parentActivityName=".ui.MainActivity" />
+        <service
+            android:name=".service.NodeService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
 
     </application>
 </manifest>

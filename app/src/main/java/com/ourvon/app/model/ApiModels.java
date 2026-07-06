@@ -60,9 +60,16 @@ public class ApiModels {
   public static class Message {
     public String id;
     public String role;
+    public String text;
     public List<ContentPart> content;
     public long createdAt;
     public String status;
+
+    public Message() {}
+    public Message(String role, String text) {
+      this.role = role;
+      this.text = text;
+    }
   }
 
   public static class ContentPart {
