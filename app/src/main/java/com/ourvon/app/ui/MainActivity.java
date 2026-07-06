@@ -189,6 +189,17 @@ public class MainActivity extends AppCompatActivity {
               updatePlaceholder(pendingText.toString());
             }
             break;
+          case "session.next.tool.called":
+            if (ev.containsKey("name"))
+              pendingText.append("\n\n\u25B6 Using ").append(ev.get("name")).append("...");
+            updatePlaceholder(pendingText.toString());
+            break;
+          case "session.next.tool.result":
+            if (ev.containsKey("result"))
+              pendingText.append("\n\u2514 Result received");
+            updatePlaceholder(pendingText.toString());
+            break;
+          case "session.next.step.ended":
           case "session.next.text.ended":
           case "session.idle":
             pendingMsgId = null;
