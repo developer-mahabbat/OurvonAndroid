@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#E65100</color>
+    <color name="primary">#FF6E40</color>
     <color name="on_primary">#FFFFFF</color>
-    <color name="primary_container">#FFE0B2</color>
-    <color name="secondary">#FF6E40</color>
-    <color name="background">#FFFFFF</color>
-    <color name="surface">#F5F5F5</color>
-    <color name="surface_variant">#EEEEEE</color>
-    <color name="on_surface">#1A1A1A</color>
-    <color name="on_surface_variant">#666666</color>
-    <color name="user_bubble">#E65100</color>
+    <color name="primary_container">#3D2B1F</color>
+    <color name="secondary">#FF9E80</color>
+    <color name="background">#0D1117</color>
+    <color name="surface">#161B22</color>
+    <color name="surface_variant">#21262D</color>
+    <color name="on_surface">#E6EDF3</color>
+    <color name="on_surface_variant">#8B949E</color>
+    <color name="user_bubble">#FF6E40</color>
     <color name="user_bubble_text">#FFFFFF</color>
-    <color name="assistant_bubble">#F0F0F0</color>
-    <color name="assistant_bubble_text">#1A1A1A</color>
-    <color name="accent">#E65100</color>
-    <color name="text_muted">#999999</color>
-    <color name="error">#D32F2F</color>
-    <color name="success">#2E7D32</color>
-    <color name="divider">#E0E0E0</color>
-    <color name="input_bg">#FFFFFF</color>
-    <color name="input_border">#DDDDDD</color>
+    <color name="assistant_bubble">#161B22</color>
+    <color name="assistant_bubble_text">#E6EDF3</color>
+    <color name="accent">#FF6E40</color>
+    <color name="text_muted">#8B949E</color>
+    <color name="error">#F85149</color>
+    <color name="success">#3FB950</color>
+    <color name="divider">#30363D</color>
+    <color name="input_bg">#161B22</color>
+    <color name="input_border">#30363D</color>
+    <color name="terminal_green">#3FB950</color>
+    <color name="terminal_yellow">#D29922</color>
 </resources>
